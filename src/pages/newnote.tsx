@@ -17,7 +17,23 @@ const NewNote: NextPage = () => {
   });
 
   const utils = trpc.useContext();
-  const addNewNote = trpc.mynotes.newNote.useMutation();
+
+  const addNewNote = trpc.mynotes.newNote.useMutation({
+    onMutate: () => {
+      utils.mynotes.allNotes.cancel();
+      const optimisticUpdate = utils.mynotes.allNotes.getData();
+
+      console.log('onMetate', optimisticUpdate);
+      
+
+      if (optimisticUpdate) {
+        utils.mynotes.allNotes.setData(undefined, optimisticUpdate);
+      }
+    },
+    onSettled: () => {
+      utils.mynotes.allNotes.invalidate();
+    },
+  });
   // console.log(addNewNote.data);
 
   return (
